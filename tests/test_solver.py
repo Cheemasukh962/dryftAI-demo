@@ -36,3 +36,26 @@ def test_moq_respected():
 def test_no_backorders_when_budget_generous():
     plan = solve_reorder(_two_part_problem())
     assert sum(sum(plan.backorder[s]) for s in ("A", "B")) == 0
+
+
+def test_tight_budget_forces_backorders():
+    plan = solve_reorder(_two_part_problem(budget_per_week=8_000))
+    assert plan.status == "OPTIMAL"
+    total_back = sum(sum(plan.backorder[s]) for s in ("A", "B"))
+    assert total_back > 0   # cannot afford enough parts -> demand goes unmet
+
+
+def test_warehouse_cap_limits_inventory():
+    prob = _two_part_problem()
+    prob.warehouse_cap = 200   # volumes: A=1, B=2 -> limited room
+    plan = solve_reorder(prob)
+    assert plan.status == "OPTIMAL"
+    for t in range(prob.weeks):
+        used = sum(prob.part(s).volume * plan.inventory[s][t] for s in ("A", "B"))
+        assert used <= 200
+
+
+def test_stockout_costs_more_than_safety_dip():
+    # With equal penalties the solver would treat them the same; assert the tiering.
+    prob = _two_part_problem()
+    assert prob.stockout_penalty > prob.safety_penalty * 10
