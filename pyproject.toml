@@ -1,0 +1,30 @@
+[project]
+name = "reorder-copilot"
+version = "0.1.0"
+description = "A decision layer for manufacturing purchasing."
+requires-python = ">=3.12"
+dependencies = [
+    "ortools>=9.14",
+    "pydantic>=2.7",
+    "pandas>=2.2",
+    "numpy>=1.26",
+    "pydantic-ai>=0.0.14",
+    "python-dotenv>=1.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0"]
+
+[project.scripts]
+reorder = "reorder.cli:main"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
