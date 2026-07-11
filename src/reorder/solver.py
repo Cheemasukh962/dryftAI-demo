@@ -15,7 +15,8 @@ from ortools.sat.python import cp_model
 from reorder.models import Problem, Plan
 
 
-def solve_reorder(problem: Problem, max_seconds: float = 10.0) -> Plan:
+def solve_reorder(problem: Problem, max_seconds: float = 10.0,
+                  relative_gap: float = 0.005) -> Plan:
     """Solve one reorder Problem and return the proven-or-best Plan.
 
     Decision variables, defined per part `s`, per week `t`:
@@ -24,6 +25,12 @@ def solve_reorder(problem: Problem, max_seconds: float = 10.0) -> Plan:
       inv[s,t]   units on hand at end of week        (integer >= 0)
       back[s,t]  demand we failed to meet            (integer >= 0)
       short[s,t] units we fell below safety stock    (integer >= 0)
+
+    `relative_gap` is the MIP gap tolerance. CP-SAT finds a near-perfect plan in
+    seconds, but *proving* it is exactly best can take minutes -- a fixed-charge
+    integer program has a long proof tail. So we accept "proven within this
+    fraction of the best possible" as optimal-for-our-purposes (standard MIP
+    practice). The Plan still reports its true gap, so nothing is hidden.
     """
     m = cp_model.CpModel()
     skus = problem.skus
@@ -96,8 +103,9 @@ def solve_reorder(problem: Problem, max_seconds: float = 10.0) -> Plan:
 
     # --- Hand the whole description to the solver and let it search ---
     solver = cp_model.CpSolver()
-    solver.parameters.max_time_in_seconds = max_seconds   # give up (as FEASIBLE) after this
-    solver.parameters.num_search_workers = 8              # search in parallel across cores
+    solver.parameters.max_time_in_seconds = max_seconds     # give up (as FEASIBLE) after this
+    solver.parameters.relative_gap_limit = relative_gap     # "optimal" once proven this close
+    solver.parameters.num_search_workers = 8                # search in parallel across cores
     status = solver.Solve(m)
     status_name = solver.StatusName(status)  # "OPTIMAL", "FEASIBLE", "INFEASIBLE", ...
 
