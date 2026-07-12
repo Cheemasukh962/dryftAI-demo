@@ -24,3 +24,23 @@ def disruption_cost(before: Plan, after: Plan) -> int:
             "A cost delta between non-OPTIMAL solves is meaningless."
         )
     return after.cost - before.cost
+
+
+def disruption_cost_bounds(before: Plan, after: Plan) -> tuple[int, int]:
+    """A RIGOROUS interval for the disruption cost, in cents.
+
+    Even an "OPTIMAL" plan carries a little slack: we stop the solver once it has
+    proven it is within a small MIP gap, so each plan's true optimum lies
+    somewhere in [bound, cost]. Subtracting two point estimates therefore hides
+    some solver noise. The honest statement is an interval:
+
+        true delta  in  [ after.bound - before.cost ,  after.cost - before.bound ]
+
+    If that interval is wide relative to the delta itself, the number should not
+    be trusted -- tighten `relative_gap` and re-solve.
+    """
+    if not (before.is_optimal and after.is_optimal):
+        raise NotOptimalError(
+            f"Refusing to compare: before={before.status}, after={after.status}."
+        )
+    return (after.bound - before.cost, after.cost - before.bound)

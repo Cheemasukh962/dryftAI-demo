@@ -29,29 +29,34 @@ def _recovered(base_plan: Plan, relaxed_plan: Plan) -> int:
 
 
 def probe_constraints(problem: Problem, base_plan: Plan,
-                      max_seconds: float = 10.0) -> list[Probe]:
+                      max_seconds: float = 10.0,
+                      relative_gap: float = 0.005) -> list[Probe]:
     """Re-solve with each constraint relaxed by a fixed step; report the
-    resulting cost recovery, sorted so the biggest lever comes first."""
+    resulting cost recovery, sorted so the biggest lever comes first.
+
+    `relative_gap` must match the tolerance the base plan was solved at, or the
+    two costs aren't measured with the same ruler.
+    """
     probes: list[Probe] = []
 
     # 1) budget +$1000/week
     p_budget = problem.model_copy(deep=True)
     p_budget.budget = [b + 100_000 for b in p_budget.budget]   # +$1000 in cents
-    plan_b = solve_reorder(p_budget, max_seconds)
+    plan_b = solve_reorder(p_budget, max_seconds, relative_gap)
     probes.append(Probe("budget +$1000/wk", _recovered(base_plan, plan_b),
                         plan_b.is_optimal))
 
     # 2) warehouse +1000 units
     p_wh = problem.model_copy(deep=True)
     p_wh.warehouse_cap += 1000
-    plan_w = solve_reorder(p_wh, max_seconds)
+    plan_w = solve_reorder(p_wh, max_seconds, relative_gap)
     probes.append(Probe("warehouse +1000u", _recovered(base_plan, plan_w),
                         plan_w.is_optimal))
 
     # 3) safety stock -10%
     p_ss = problem.model_copy(deep=True)
     p_ss.safety_stock = {s: int(v * 0.9) for s, v in p_ss.safety_stock.items()}
-    plan_s = solve_reorder(p_ss, max_seconds)
+    plan_s = solve_reorder(p_ss, max_seconds, relative_gap)
     probes.append(Probe("safety -10%", _recovered(base_plan, plan_s),
                         plan_s.is_optimal))
 
