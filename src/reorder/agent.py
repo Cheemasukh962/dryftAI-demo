@@ -31,6 +31,7 @@ from reorder.probes import probe_constraints
 from reorder.simulate import simulate
 from reorder.diff import diff_plans
 from reorder.models import to_dollars
+from reorder.observability import configure_tracing, flush_traces
 
 load_dotenv()
 
@@ -129,6 +130,9 @@ def build_agent(model=None) -> Agent:
     """Construct the agent. `defer_model_check=True` means we do NOT need an API
     key just to build it -- only an actual live run needs one. That keeps the test
     suite free and offline."""
+    # Switches on Langfuse tracing IF Langfuse keys are set; otherwise a no-op.
+    configure_tracing()
+
     agent = Agent(
         model or DEFAULT_MODEL,
         deps_type=Deps,
@@ -154,4 +158,8 @@ def build_agent(model=None) -> Agent:
 def run_disruption(text: str, data_dir: str = "data", model=None) -> Recommendation:
     """Entry point: a buyer's sentence in, a validated Recommendation out."""
     agent = build_agent(model)
-    return agent.run_sync(text, deps=Deps(data_dir=data_dir)).output
+    try:
+        return agent.run_sync(text, deps=Deps(data_dir=data_dir)).output
+    finally:
+        # Short-lived CLI/script runs can exit before the exporter flushes.
+        flush_traces()

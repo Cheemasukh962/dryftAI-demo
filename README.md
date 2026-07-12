@@ -268,6 +268,44 @@ sentence) are **opt-in**, so CI never spends money:
 $env:REORDER_LIVE_EVAL=1; pytest tests/test_agent_evals.py
 ```
 
+## 11b. Observability — tracing the agent with Langfuse
+
+The solver is deterministic: it either proves `OPTIMAL` or it doesn't. **The agent is the
+only unpredictable part of the system** — it can pick the wrong tool, misread a SKU, or
+need two attempts to get it right, and *none of that shows up in a return value*.
+
+Tracing is how you see what it actually did. Every agent run is recorded as a tree —
+which tool was called, with what arguments, what came back, how long it took, how many
+tokens it burned — and shipped to **Langfuse**, where you can click through it.
+
+**No new dependency.** Pydantic AI emits OpenTelemetry spans, and Langfuse ingests
+OpenTelemetry, so `observability.py` just points the OTel exporter at Langfuse and turns
+Pydantic AI's instrumentation on.
+
+**Entirely optional.** With no Langfuse keys set, `configure_tracing()` is a no-op and the
+app behaves exactly as before — the test suite stays free, offline, and fast.
+
+```powershell
+# in .env
+LANGFUSE_PUBLIC_KEY=pk-lf-...
+LANGFUSE_SECRET_KEY=sk-lf-...
+LANGFUSE_HOST=https://cloud.langfuse.com
+```
+
+Then any agent run traces automatically. To prove the pipe works **without a Langfuse
+account**, this script stands up a local OTLP receiver and asserts real spans arrive:
+
+```powershell
+python scripts/verify_langfuse_tracing.py
+```
+```
+OTLP requests received: 2
+  POST /v1/traces  17038 bytes  content-type=application/x-protobuf  auth=Basic ***
+  span content contains b'agent run': True
+  span content contains b'analyze_lead_time_change': True
+PASS: real spans exported to the OTLP /v1/traces endpoint with Basic auth.
+```
+
 ## 12. Generalization
 
 This engine also runs on real HPC job traces from the Parallel Workloads Archive.
