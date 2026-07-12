@@ -19,18 +19,24 @@ def build_problem(parts_df: pd.DataFrame, forecast: dict, weeks: int = 12,
     parts = [Part(**row) for row in parts_df.to_dict("records")]
     skus = [p.sku for p in parts]
 
+    part_by_sku = {p.sku: p for p in parts}
+
     # The solver plans against the middle-of-the-road (p50) demand.
     demand = {s: forecast[s]["p50"][:weeks] for s in skus}
 
-    # Safety stock ~ one "service level" of forecast spread. (p90 - p50) already
-    # measures ~1 z of uncertainty, so we use its horizon average as the buffer.
+    # Safety stock must cover demand variability over the RISK WINDOW -- the lead
+    # time plus one review period -- not just a single week. If weekly forecast
+    # errors are roughly independent, the spread over L+1 weeks grows like
+    # sqrt(L+1). (p90 - p50) is ~1 week of spread, so we scale it by sqrt(L+1).
+    # Ignoring lead time here badly under-buffers long-lead parts (the bug that
+    # first made the optimizer lose to the (s,Q) baseline).
     safety_stock = {}
     for s in skus:
-        spread = np.mean([forecast[s]["p90"][t] - forecast[s]["p50"][t]
-                          for t in range(weeks)])
-        safety_stock[s] = max(0, int(round(spread)))
+        weekly_spread = np.mean([forecast[s]["p90"][t] - forecast[s]["p50"][t]
+                                 for t in range(weeks)])
+        risk_window = part_by_sku[s].lead_time + 1
+        safety_stock[s] = max(0, int(round(weekly_spread * np.sqrt(risk_window))))
 
-    part_by_sku = {p.sku: p for p in parts}
     if budget_per_week is None:
         # default: 1.2x the average weekly spend needed to buy expected demand
         weekly_spend = sum(part_by_sku[s].unit_cost * np.mean(demand[s]) for s in skus)

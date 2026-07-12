@@ -61,6 +61,11 @@ def solve_reorder(problem: Problem, max_seconds: float = 10.0,
             # Lead time as an index shift: an order placed L weeks ago ARRIVES now.
             # Before week L there is nothing in the pipeline yet, so arrivals = 0.
             arrivals = q[s, t - p.lead_time] if t - p.lead_time >= 0 else 0
+            # Plus any units already ORDERED in an earlier real week that are due to
+            # land this week (the in-transit pipeline for a rolling re-solve).
+            incoming = problem.pipeline.get(s, [])
+            if t < len(incoming):
+                arrivals = arrivals + incoming[t]
 
             # "Net inventory position" = on-hand minus what we owe (backorders).
             # Last week's net carries into this week; week 0 starts from opening stock.

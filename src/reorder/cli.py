@@ -11,6 +11,7 @@ from reorder.datagen import generate
 from reorder.forecast import forecast_quantiles
 from reorder.problem_builder import build_problem
 from reorder.solver import solve_reorder
+from reorder.baseline import backtest
 from reorder.models import to_dollars
 
 
@@ -38,6 +39,21 @@ def cmd_solve(args):
     print(f"total units ordered over {args.weeks} weeks: {total_units}")
 
 
+def cmd_backtest(args):
+    parts = pd.read_csv(f"{args.data_dir}/parts.csv")
+    hist = pd.read_csv(f"{args.data_dir}/demand_history.csv")
+    r = backtest(parts, hist, test_weeks=args.test_weeks,
+                 budget_factor=args.budget_factor, max_seconds=args.max_seconds)
+    print(f"=== Backtest over last {args.test_weeks} weeks "
+          f"(binding budget ${to_dollars(r['budget_per_week']):,.0f}/wk) ===")
+    print(f"solver:   cost=${to_dollars(r['solver']['cost']):>13,.2f}  "
+          f"fill={r['solver']['fill_rate']:.1%}")
+    print(f"(s,Q):    cost=${to_dollars(r['sq']['cost']):>13,.2f}  "
+          f"fill={r['sq']['fill_rate']:.1%}")
+    print(f"saved:    ${r['dollars_saved']:>13,.2f}   "
+          f"fill delta={r['fill_delta']:+.1%}")
+
+
 def main():
     ap = argparse.ArgumentParser(prog="reorder")
     ap.add_argument("--data-dir", default="data")
@@ -52,6 +68,12 @@ def main():
     s.add_argument("--weeks", type=int, default=12)
     s.add_argument("--max-seconds", type=float, default=20.0)
     s.set_defaults(func=cmd_solve)
+
+    b = sub.add_parser("backtest", help="solver vs (s,Q) on held-out demand")
+    b.add_argument("--test-weeks", type=int, default=26)
+    b.add_argument("--budget-factor", type=float, default=0.9)
+    b.add_argument("--max-seconds", type=float, default=5.0)
+    b.set_defaults(func=cmd_backtest)
 
     args = ap.parse_args()
     args.func(args)

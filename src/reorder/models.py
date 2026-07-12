@@ -43,6 +43,9 @@ class Problem(BaseModel):
     warehouse_cap: int               # total volume the warehouse can hold
     stockout_penalty: int            # cents charged per unit of UNMET demand per week
     safety_penalty: int              # cents charged per unit BELOW safety stock per week
+    pipeline: dict[str, list[int]] = {}  # sku -> units already ORDERED that arrive
+                                         # each week (from earlier commitments). Lets a
+                                         # rolling re-solve honor orders still in transit.
 
     def part(self, sku: str) -> Part:
         """Look up one Part by its SKU."""
