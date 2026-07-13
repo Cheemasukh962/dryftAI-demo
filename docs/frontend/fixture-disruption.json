@@ -1,0 +1,129 @@
+{
+  "sku": "PART-1003",
+  "old_lead_time_weeks": 3,
+  "new_lead_time_weeks": 6,
+  "solver_status": "OPTIMAL",
+  "weeks": 12,
+  "disruption_cost_dollars": 808203.14,
+  "disruption_cost_range_dollars": [
+    799241.23,
+    816618.61
+  ],
+  "binding_constraint": {
+    "name": "budget +$10k/wk",
+    "proven": true,
+    "recovered_dollars": 332398.31
+  },
+  "probes": [
+    {
+      "name": "budget +$10k/wk",
+      "recovered_dollars": 332398.31,
+      "provable_low_dollars": 323436.4,
+      "provable_high_dollars": 346427.11
+    },
+    {
+      "name": "safety -50%",
+      "recovered_dollars": 47706.64,
+      "provable_low_dollars": 38744.73,
+      "provable_high_dollars": 71324.79
+    },
+    {
+      "name": "warehouse +10000u",
+      "recovered_dollars": 0.0,
+      "provable_low_dollars": 0.0,
+      "provable_high_dollars": 8629.53
+    }
+  ],
+  "simulation": {
+    "runs": 1000,
+    "fill_rate_p50": 0.8128845315472726,
+    "fill_rate_p10": 0.8052330157782529,
+    "peak_cash_p50_dollars": 235496.16
+  },
+  "weekly_budget_dollars": 361134.83,
+  "cash_spent_week0_before_dollars": 361134.42,
+  "cash_spent_week0_after_dollars": 361128.64,
+  "parts_affected": 17,
+  "total_parts": 20,
+  "order_changes_week0": [
+    {
+      "sku": "PART-1003",
+      "before": 298,
+      "after": 1067,
+      "delta": 769,
+      "cash_delta_dollars": 85812.71
+    },
+    {
+      "sku": "PART-1012",
+      "before": 730,
+      "after": 234,
+      "delta": -496,
+      "cash_delta_dollars": -60412.8
+    },
+    {
+      "sku": "PART-1000",
+      "before": 206,
+      "after": 0,
+      "delta": -206,
+      "cash_delta_dollars": -25908.62
+    },
+    {
+      "sku": "PART-1011",
+      "before": 282,
+      "after": 295,
+      "delta": 13,
+      "cash_delta_dollars": 412.62
+    },
+    {
+      "sku": "PART-1018",
+      "before": 1444,
+      "after": 1454,
+      "delta": 10,
+      "cash_delta_dollars": 95.4
+    },
+    {
+      "sku": "PART-1013",
+      "before": 50,
+      "after": 52,
+      "delta": 2,
+      "cash_delta_dollars": 98.86
+    },
+    {
+      "sku": "PART-1005",
+      "before": 541,
+      "after": 540,
+      "delta": -1,
+      "cash_delta_dollars": -103.95
+    }
+  ],
+  "focus_part_schedule": {
+    "before": [
+      298,
+      271,
+      228,
+      270,
+      342,
+      268,
+      298,
+      296,
+      312,
+      0,
+      0,
+      0
+    ],
+    "after": [
+      1067,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ]
+  }
+}

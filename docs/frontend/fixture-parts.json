@@ -1,0 +1,182 @@
+[
+  {
+    "sku": "PART-1000",
+    "unit_cost_dollars": 125.77,
+    "lead_time_weeks": 4,
+    "moq": 200,
+    "opening_inventory": 544,
+    "avg_weekly_demand": 275,
+    "weeks_of_cover": 2.0
+  },
+  {
+    "sku": "PART-1001",
+    "unit_cost_dollars": 174.96,
+    "lead_time_weeks": 1,
+    "moq": 25,
+    "opening_inventory": 805,
+    "avg_weekly_demand": 358,
+    "weeks_of_cover": 2.2
+  },
+  {
+    "sku": "PART-1002",
+    "unit_cost_dollars": 62.0,
+    "lead_time_weeks": 4,
+    "moq": 50,
+    "opening_inventory": 336,
+    "avg_weekly_demand": 148,
+    "weeks_of_cover": 2.3
+  },
+  {
+    "sku": "PART-1003",
+    "unit_cost_dollars": 111.59,
+    "lead_time_weeks": 3,
+    "moq": 200,
+    "opening_inventory": 635,
+    "avg_weekly_demand": 203,
+    "weeks_of_cover": 3.1
+  },
+  {
+    "sku": "PART-1004",
+    "unit_cost_dollars": 44.63,
+    "lead_time_weeks": 1,
+    "moq": 25,
+    "opening_inventory": 529,
+    "avg_weekly_demand": 334,
+    "weeks_of_cover": 1.6
+  },
+  {
+    "sku": "PART-1005",
+    "unit_cost_dollars": 103.95,
+    "lead_time_weeks": 4,
+    "moq": 50,
+    "opening_inventory": 881,
+    "avg_weekly_demand": 391,
+    "weeks_of_cover": 2.2
+  },
+  {
+    "sku": "PART-1006",
+    "unit_cost_dollars": 100.38,
+    "lead_time_weeks": 1,
+    "moq": 25,
+    "opening_inventory": 416,
+    "avg_weekly_demand": 160,
+    "weeks_of_cover": 2.6
+  },
+  {
+    "sku": "PART-1007",
+    "unit_cost_dollars": 41.72,
+    "lead_time_weeks": 3,
+    "moq": 50,
+    "opening_inventory": 507,
+    "avg_weekly_demand": 299,
+    "weeks_of_cover": 1.7
+  },
+  {
+    "sku": "PART-1008",
+    "unit_cost_dollars": 54.98,
+    "lead_time_weeks": 4,
+    "moq": 200,
+    "opening_inventory": 949,
+    "avg_weekly_demand": 389,
+    "weeks_of_cover": 2.4
+  },
+  {
+    "sku": "PART-1009",
+    "unit_cost_dollars": 148.87,
+    "lead_time_weeks": 3,
+    "moq": 25,
+    "opening_inventory": 558,
+    "avg_weekly_demand": 198,
+    "weeks_of_cover": 2.8
+  },
+  {
+    "sku": "PART-1010",
+    "unit_cost_dollars": 73.53,
+    "lead_time_weeks": 3,
+    "moq": 100,
+    "opening_inventory": 523,
+    "avg_weekly_demand": 262,
+    "weeks_of_cover": 2.0
+  },
+  {
+    "sku": "PART-1011",
+    "unit_cost_dollars": 31.74,
+    "lead_time_weeks": 3,
+    "moq": 200,
+    "opening_inventory": 393,
+    "avg_weekly_demand": 167,
+    "weeks_of_cover": 2.4
+  },
+  {
+    "sku": "PART-1012",
+    "unit_cost_dollars": 121.8,
+    "lead_time_weeks": 4,
+    "moq": 100,
+    "opening_inventory": 408,
+    "avg_weekly_demand": 188,
+    "weeks_of_cover": 2.2
+  },
+  {
+    "sku": "PART-1013",
+    "unit_cost_dollars": 49.43,
+    "lead_time_weeks": 2,
+    "moq": 50,
+    "opening_inventory": 71,
+    "avg_weekly_demand": 39,
+    "weeks_of_cover": 1.8
+  },
+  {
+    "sku": "PART-1014",
+    "unit_cost_dollars": 135.01,
+    "lead_time_weeks": 1,
+    "moq": 50,
+    "opening_inventory": 42,
+    "avg_weekly_demand": 24,
+    "weeks_of_cover": 1.7
+  },
+  {
+    "sku": "PART-1015",
+    "unit_cost_dollars": 169.32,
+    "lead_time_weeks": 4,
+    "moq": 200,
+    "opening_inventory": 348,
+    "avg_weekly_demand": 200,
+    "weeks_of_cover": 1.7
+  },
+  {
+    "sku": "PART-1016",
+    "unit_cost_dollars": 40.11,
+    "lead_time_weeks": 1,
+    "moq": 200,
+    "opening_inventory": 861,
+    "avg_weekly_demand": 310,
+    "weeks_of_cover": 2.8
+  },
+  {
+    "sku": "PART-1017",
+    "unit_cost_dollars": 129.03,
+    "lead_time_weeks": 4,
+    "moq": 100,
+    "opening_inventory": 448,
+    "avg_weekly_demand": 241,
+    "weeks_of_cover": 1.9
+  },
+  {
+    "sku": "PART-1018",
+    "unit_cost_dollars": 9.54,
+    "lead_time_weeks": 4,
+    "moq": 200,
+    "opening_inventory": 769,
+    "avg_weekly_demand": 391,
+    "weeks_of_cover": 2.0
+  },
+  {
+    "sku": "PART-1019",
+    "unit_cost_dollars": 150.76,
+    "lead_time_weeks": 4,
+    "moq": 25,
+    "opening_inventory": 67,
+    "avg_weekly_demand": 39,
+    "weeks_of_cover": 1.7
+  }
+]

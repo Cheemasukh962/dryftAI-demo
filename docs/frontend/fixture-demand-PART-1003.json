@@ -1,0 +1,418 @@
+[
+  {
+    "week": 0,
+    "units": 200
+  },
+  {
+    "week": 1,
+    "units": 237
+  },
+  {
+    "week": 2,
+    "units": 180
+  },
+  {
+    "week": 3,
+    "units": 235
+  },
+  {
+    "week": 4,
+    "units": 296
+  },
+  {
+    "week": 5,
+    "units": 216
+  },
+  {
+    "week": 6,
+    "units": 317
+  },
+  {
+    "week": 7,
+    "units": 294
+  },
+  {
+    "week": 8,
+    "units": 240
+  },
+  {
+    "week": 9,
+    "units": 268
+  },
+  {
+    "week": 10,
+    "units": 272
+  },
+  {
+    "week": 11,
+    "units": 292
+  },
+  {
+    "week": 12,
+    "units": 272
+  },
+  {
+    "week": 13,
+    "units": 259
+  },
+  {
+    "week": 14,
+    "units": 280
+  },
+  {
+    "week": 15,
+    "units": 246
+  },
+  {
+    "week": 16,
+    "units": 231
+  },
+  {
+    "week": 17,
+    "units": 280
+  },
+  {
+    "week": 18,
+    "units": 313
+  },
+  {
+    "week": 19,
+    "units": 207
+  },
+  {
+    "week": 20,
+    "units": 262
+  },
+  {
+    "week": 21,
+    "units": 228
+  },
+  {
+    "week": 22,
+    "units": 208
+  },
+  {
+    "week": 23,
+    "units": 265
+  },
+  {
+    "week": 24,
+    "units": 207
+  },
+  {
+    "week": 25,
+    "units": 263
+  },
+  {
+    "week": 26,
+    "units": 181
+  },
+  {
+    "week": 27,
+    "units": 206
+  },
+  {
+    "week": 28,
+    "units": 179
+  },
+  {
+    "week": 29,
+    "units": 156
+  },
+  {
+    "week": 30,
+    "units": 183
+  },
+  {
+    "week": 31,
+    "units": 156
+  },
+  {
+    "week": 32,
+    "units": 166
+  },
+  {
+    "week": 33,
+    "units": 145
+  },
+  {
+    "week": 34,
+    "units": 118
+  },
+  {
+    "week": 35,
+    "units": 134
+  },
+  {
+    "week": 36,
+    "units": 134
+  },
+  {
+    "week": 37,
+    "units": 150
+  },
+  {
+    "week": 38,
+    "units": 113
+  },
+  {
+    "week": 39,
+    "units": 130
+  },
+  {
+    "week": 40,
+    "units": 98
+  },
+  {
+    "week": 41,
+    "units": 148
+  },
+  {
+    "week": 42,
+    "units": 116
+  },
+  {
+    "week": 43,
+    "units": 105
+  },
+  {
+    "week": 44,
+    "units": 149
+  },
+  {
+    "week": 45,
+    "units": 183
+  },
+  {
+    "week": 46,
+    "units": 127
+  },
+  {
+    "week": 47,
+    "units": 145
+  },
+  {
+    "week": 48,
+    "units": 162
+  },
+  {
+    "week": 49,
+    "units": 159
+  },
+  {
+    "week": 50,
+    "units": 213
+  },
+  {
+    "week": 51,
+    "units": 185
+  },
+  {
+    "week": 52,
+    "units": 197
+  },
+  {
+    "week": 53,
+    "units": 251
+  },
+  {
+    "week": 54,
+    "units": 213
+  },
+  {
+    "week": 55,
+    "units": 266
+  },
+  {
+    "week": 56,
+    "units": 221
+  },
+  {
+    "week": 57,
+    "units": 218
+  },
+  {
+    "week": 58,
+    "units": 198
+  },
+  {
+    "week": 59,
+    "units": 358
+  },
+  {
+    "week": 60,
+    "units": 271
+  },
+  {
+    "week": 61,
+    "units": 300
+  },
+  {
+    "week": 62,
+    "units": 291
+  },
+  {
+    "week": 63,
+    "units": 302
+  },
+  {
+    "week": 64,
+    "units": 298
+  },
+  {
+    "week": 65,
+    "units": 380
+  },
+  {
+    "week": 66,
+    "units": 248
+  },
+  {
+    "week": 67,
+    "units": 223
+  },
+  {
+    "week": 68,
+    "units": 243
+  },
+  {
+    "week": 69,
+    "units": 226
+  },
+  {
+    "week": 70,
+    "units": 307
+  },
+  {
+    "week": 71,
+    "units": 302
+  },
+  {
+    "week": 72,
+    "units": 224
+  },
+  {
+    "week": 73,
+    "units": 200
+  },
+  {
+    "week": 74,
+    "units": 231
+  },
+  {
+    "week": 75,
+    "units": 284
+  },
+  {
+    "week": 76,
+    "units": 130
+  },
+  {
+    "week": 77,
+    "units": 232
+  },
+  {
+    "week": 78,
+    "units": 172
+  },
+  {
+    "week": 79,
+    "units": 226
+  },
+  {
+    "week": 80,
+    "units": 156
+  },
+  {
+    "week": 81,
+    "units": 169
+  },
+  {
+    "week": 82,
+    "units": 130
+  },
+  {
+    "week": 83,
+    "units": 136
+  },
+  {
+    "week": 84,
+    "units": 184
+  },
+  {
+    "week": 85,
+    "units": 164
+  },
+  {
+    "week": 86,
+    "units": 132
+  },
+  {
+    "week": 87,
+    "units": 119
+  },
+  {
+    "week": 88,
+    "units": 95
+  },
+  {
+    "week": 89,
+    "units": 124
+  },
+  {
+    "week": 90,
+    "units": 130
+  },
+  {
+    "week": 91,
+    "units": 129
+  },
+  {
+    "week": 92,
+    "units": 131
+  },
+  {
+    "week": 93,
+    "units": 112
+  },
+  {
+    "week": 94,
+    "units": 138
+  },
+  {
+    "week": 95,
+    "units": 143
+  },
+  {
+    "week": 96,
+    "units": 179
+  },
+  {
+    "week": 97,
+    "units": 201
+  },
+  {
+    "week": 98,
+    "units": 161
+  },
+  {
+    "week": 99,
+    "units": 153
+  },
+  {
+    "week": 100,
+    "units": 180
+  },
+  {
+    "week": 101,
+    "units": 174
+  },
+  {
+    "week": 102,
+    "units": 179
+  },
+  {
+    "week": 103,
+    "units": 209
+  }
+]

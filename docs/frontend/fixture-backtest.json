@@ -1,0 +1,14 @@
+{
+  "test_weeks": 12,
+  "weekly_budget_dollars": 366871.53,
+  "solver": {
+    "cost_dollars": 1329961.27,
+    "fill_rate": 0.8443
+  },
+  "baseline_sq": {
+    "cost_dollars": 2021032.15,
+    "fill_rate": 0.7794
+  },
+  "dollars_saved": 691070.88,
+  "fill_rate_delta": 0.065
+}
