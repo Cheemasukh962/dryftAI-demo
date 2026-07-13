@@ -53,3 +53,25 @@ def test_binding_constraint_refuses_to_guess_when_probes_overlap():
     top, proven = binding_constraint(clear)
     assert top.name == "a"
     assert proven is True          # 400 > 150
+
+
+def test_a_timed_out_probe_must_not_be_scored_as_zero_recovery():
+    """The nastiest bug in the project.
+
+    When a probe fails to prove optimality we record its recovery as 0. But
+    "this solve ran out of time" and "relaxing this recovers nothing" are
+    completely different claims, and 0 cannot tell them apart. A timed-out probe
+    could actually be the BIGGEST lever -- so it must never be silently demoted
+    to last place and let a lesser constraint be crowned PROVEN.
+
+    This really happened live: under load the budget probe timed out, scored 0,
+    and `safety` was named the binding constraint with a PROVEN badge. Wrong.
+    """
+    probes = [
+        Probe("safety -50%", recovered=48_000, lo=40_000, hi=55_000, feasible=True),
+        Probe("budget +$10k/wk", recovered=0, lo=0, hi=0, feasible=False),  # timed out!
+    ]
+    top, proven = binding_constraint(probes)
+    assert top.name == "safety -50%"
+    # Without the guard, safety.lo (40k) > budget.hi (0) => it would claim PROVEN.
+    assert proven is False, "must not crown a winner while a probe is unsolved"

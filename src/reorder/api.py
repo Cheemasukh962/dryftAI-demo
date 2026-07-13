@@ -91,8 +91,10 @@ class DisruptRequest(BaseModel):
     new_lead_time_weeks: int
 
 
-@app.post("/api/disrupt")
-def disrupt(req: DisruptRequest):
+def _disrupt_payload(sku: str, new_lead_time_weeks: int) -> dict:
+    """The full analysis. Shared by /api/disrupt and /api/agent so the AI path and
+    the plain path can never disagree -- and so the agent path only solves ONCE."""
+    req = DisruptRequest(sku=sku, new_lead_time_weeks=new_lead_time_weeks)
     if req.new_lead_time_weeks < 1:
         raise HTTPException(400, "new_lead_time_weeks must be >= 1")
     problem = _problem()
@@ -172,6 +174,11 @@ def disrupt(req: DisruptRequest):
     }
 
 
+@app.post("/api/disrupt")
+def disrupt(req: DisruptRequest):
+    return _disrupt_payload(req.sku, req.new_lead_time_weeks)
+
+
 CACHE_PATH = f"{DATA_DIR}/backtest_cache.json"
 
 
@@ -217,16 +224,40 @@ class AgentRequest(BaseModel):
 
 @app.post("/api/agent")
 def agent(req: AgentRequest):
-    """The natural-language path. Needs OPENAI_API_KEY; everything else does not."""
+    """The natural-language path. This is the ONLY endpoint that uses an LLM.
+
+    Pydantic AI is used at BOTH ends and nowhere in between:
+      1. EXTRACT  - the model reads the buyer's sentence and must return a
+                    validated DisruptionInput. A hallucinated SKU is rejected
+                    (ModelRetry) before it can reach the solver.
+      2. SOLVE    - plain Python. CP-SAT decides every number. No AI.
+      3. EXPLAIN  - the model turns the solver's numbers into prose for a buyer.
+
+    Needs OPENAI_API_KEY. Everything else in this API works without one.
+    """
+    parts, _ = _load()
+    valid = sorted(parts["sku"].tolist())
     try:
-        from reorder.agent import run_disruption
-        rec = run_disruption(req.text, data_dir=DATA_DIR)
-    except Exception as e:                     # missing key, model error, etc.
+        from reorder.agent import extract_disruption, explain_result
+    except Exception as e:
         raise HTTPException(503, f"Agent unavailable: {e}")
-    return {"explanation": rec.explanation,
-            "binding_constraint": rec.binding_constraint,
-            "disruption_cost_dollars": rec.disruption_cost_dollars,
-            "counterfactuals": rec.counterfactuals}
+
+    try:
+        parsed = extract_disruption(req.text, valid)          # 1. LLM in
+    except Exception as e:
+        raise HTTPException(422, f"Could not read that sentence: {e}")
+
+    payload = _disrupt_payload(parsed.sku, parsed.new_lead_time_weeks)  # 2. solver
+
+    try:
+        explanation = explain_result(payload)                 # 3. LLM out
+    except Exception as e:
+        explanation = f"(The solver answered, but the explanation step failed: {e})"
+
+    return {"explanation": explanation,
+            "parsed": {"sku": parsed.sku,
+                       "new_lead_time_weeks": parsed.new_lead_time_weeks},
+            "recommendation": payload}
 
 
 @app.get("/api/health")

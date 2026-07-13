@@ -168,3 +168,23 @@ export const toBacktestRows = (b: BacktestResult): BacktestRow[] => [
   { label: "(s,Q) rule", cost: Math.round(b.baseline_sq.cost_dollars), fill: +(b.baseline_sq.fill_rate * 100).toFixed(1) },
   { label: "This solver", cost: Math.round(b.solver.cost_dollars), fill: +(b.solver.fill_rate * 100).toFixed(1) },
 ];
+
+/* ---------- the AI path (the ONLY endpoint that uses an LLM) ----------
+ * EXTRACT (LLM reads the sentence)  ->  SOLVE (no AI)  ->  EXPLAIN (LLM writes prose)
+ * The model translates at both ends. It never touches the arithmetic.
+ */
+export interface AgentResult {
+  explanation: string;                                   // the LLM's prose
+  parsed: { sku: string; new_lead_time_weeks: number };  // what it understood
+  recommendation: DisruptionResult;                      // what the SOLVER decided
+}
+
+export async function fetchAgent(text: string): Promise<AgentResult> {
+  const r = await fetch("/api/agent", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ text }),
+  });
+  if (!r.ok) throw new Error(`/api/agent -> ${r.status} ${await r.text()}`);
+  return r.json();
+}

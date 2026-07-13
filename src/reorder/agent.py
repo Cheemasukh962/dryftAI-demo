@@ -213,3 +213,96 @@ def run_disruption(text: str, data_dir: str = "data", model=None) -> Recommendat
     finally:
         # Short-lived CLI/script runs can exit before the exporter flushes.
         flush_traces()
+
+
+# ---------------------------------------------------------------------------
+# The two-stage path used by the web API. Same principle as the tool-calling
+# agent above, but split so the solver runs exactly ONCE.
+#
+# This is the clearest possible statement of the architecture:
+#   extract_disruption()  LLM  ->  typed input   (Pydantic validates it)
+#   ...the solver...      NO AI ->  the numbers
+#   explain_result()      LLM  ->  prose         (Pydantic validates it)
+# The model is a translator at both ends. It never touches the arithmetic.
+# ---------------------------------------------------------------------------
+
+class DisruptionInput(BaseModel):
+    """What the model is allowed to hand the solver. Nothing else gets through."""
+    sku: str
+    new_lead_time_weeks: int
+
+
+def extract_disruption(text: str, valid_skus: list[str],
+                       model=None) -> DisruptionInput:
+    """Read a buyer's sentence, return a VALIDATED (sku, new_lead_time).
+
+    The whole point: 'going from 3 weeks to 6 weeks' contains two numbers, and the
+    model has to know 6 is the new one. That reading comprehension is the only
+    thing an LLM is here for. Everything it returns is then checked against the
+    real SKU list -- an invented part number is bounced back with ModelRetry
+    instead of being handed to CP-SAT.
+    """
+    configure_tracing()
+    agent = Agent(
+        model or DEFAULT_MODEL,
+        output_type=DisruptionInput,
+        defer_model_check=True,
+        system_prompt=(
+            "Read the buyer's message and extract the affected SKU and its NEW "
+            "lead time in weeks. If the message says 'going from 3 weeks to 6 "
+            "weeks', the new lead time is 6, not 3. Return nothing else."),
+    )
+
+    @agent.output_validator
+    def _check(value: DisruptionInput) -> DisruptionInput:
+        if value.sku not in valid_skus:
+            raise ModelRetry(
+                f"'{value.sku}' is not a real SKU. Valid ones: {valid_skus[:8]}")
+        if value.new_lead_time_weeks < 1:
+            raise ModelRetry("new_lead_time_weeks must be a whole number >= 1.")
+        return value
+
+    try:
+        return agent.run_sync(text).output
+    finally:
+        flush_traces()
+
+
+def explain_result(payload: dict, model=None) -> str:
+    """Turn the solver's numbers into two or three sentences a buyer can act on.
+
+    The model sees ONLY the result. It has no idea CP-SAT exists, and it has no
+    arithmetic to do -- every figure it quotes is already in `payload`.
+    """
+    configure_tracing()
+    agent = Agent(
+        model or DEFAULT_MODEL,
+        output_type=str,
+        defer_model_check=True,
+        system_prompt=(
+            "You are a purchasing copilot. You are given the SOLVER'S OUTPUT. "
+            "Write 2-3 short sentences a busy buyer can act on: what to order this "
+            "week, what the delay costs (if a cost range is given, say the cost is "
+            "provably between those two numbers), and which limit is holding them "
+            "back and what relaxing it is worth. "
+            "NEVER invent or recompute a number -- quote only what you are given. "
+            "If the cost is null, say the solver could not prove a reliable cost. "
+            "Plain business English. No JSON, no field names, no raw arrays."),
+    )
+    facts = {
+        "sku": payload["sku"],
+        "new_lead_time_weeks": payload["new_lead_time_weeks"],
+        "order_this_week": payload["focus_part_schedule"]["after"][0],
+        "previous_order_this_week": payload["focus_part_schedule"]["before"][0],
+        "disruption_cost_dollars": payload["disruption_cost_dollars"],
+        "disruption_cost_range_dollars": payload["disruption_cost_range_dollars"],
+        "binding_constraint": payload["binding_constraint"],
+        "counterfactuals": payload["probes"],
+        "parts_reallocated_this_week": len(payload["order_changes_week0"]),
+        "weekly_budget_dollars": payload["weekly_budget_dollars"],
+        "fill_rate_p50": payload["simulation"]["fill_rate_p50"],
+    }
+    try:
+        return agent.run_sync(f"Solver output:\n{facts}").output
+    finally:
+        flush_traces()

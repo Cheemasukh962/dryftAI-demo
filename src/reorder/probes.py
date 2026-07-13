@@ -88,14 +88,30 @@ def probe_constraints(problem: Problem, base_plan: Plan,
 def binding_constraint(probes: list[Probe]) -> tuple[Probe, bool]:
     """Which limit is binding -- and can we actually PROVE it?
 
-    Returns (top_probe, proven). `proven` is True only when the winner's WORST-CASE
-    recovery still beats the runner-up's BEST-CASE recovery. If it doesn't, the
-    solver's slack is wide enough to swallow the difference and we must not claim a
-    winner.
+    Returns (top_probe, proven). `proven` requires BOTH:
+
+    1. EVERY probe actually solved to OPTIMAL. If one merely ran out of time we
+       recorded its recovery as 0 -- but "the solve timed out" and "relaxing this
+       recovers nothing" are completely different claims, and 0 cannot tell them
+       apart. A timed-out probe could in truth be the BIGGEST lever, so it may not
+       be quietly demoted to last place. (This really happened: under load the
+       budget probe timed out, was scored 0, and `safety` was crowned the binding
+       constraint -- with a PROVEN badge on it. It was wrong.)
+
+    2. The winner's WORST-CASE recovery beats the runner-up's BEST-CASE recovery.
+       Otherwise the solver's gap slack is wide enough to swallow the difference.
+
+    If either fails, `proven` is False and the caller must not name a bottleneck.
     """
     if not probes:
         raise ValueError("no probes")
     top = probes[0]
+
+    # 1. an unsolved probe makes the whole ranking untrustworthy
+    if any(not p.feasible for p in probes):
+        return top, False
+
+    # 2. the intervals must not overlap
     if len(probes) == 1:
         return top, top.lo > 0
     runner_up = probes[1]

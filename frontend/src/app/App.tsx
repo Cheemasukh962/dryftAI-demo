@@ -7,7 +7,7 @@ import {
   CheckCircle, AlertTriangle, Moon, Sun, RotateCcw,
 } from "lucide-react";
 import {
-  fetchParts, fetchBacktest, fetchDisruption,
+  fetchParts, fetchBacktest, fetchDisruption, fetchAgent,
   toPartRows, toReallocation, toProbeRows, toSchedule, toBacktestRows,
   type DisruptionResult, type BacktestResult,
   type PartRow, type ReallocRow, type ProbeRow, type ScheduleRow, type BacktestRow,
@@ -280,7 +280,7 @@ function Section1Factory({ sRef, d, parts }: { sRef: React.RefObject<HTMLDivElem
 }
 
 /* ─── Section 2: Disruption ──────────────────────────────────────────────── */
-function Section2Disruption({ onSubmit, loading, sRef, d, parts }: { onSubmit: (sku: string, lead: number) => void; loading: boolean; sRef: React.RefObject<HTMLDivElement | null>; d: typeof Dk; parts: PartRow[] }) {
+function Section2Disruption({ onSubmit, onAsk, loading, sRef, d, parts }: { onSubmit: (sku: string, lead: number) => void; onAsk: (text: string) => void; loading: boolean; sRef: React.RefObject<HTMLDivElement | null>; d: typeof Dk; parts: PartRow[] }) {
   const [sku, setSku] = useState("PART-1003");
   const [leadTime, setLeadTime] = useState(6);
   const [nlText, setNlText] = useState("Kraus emailed — PART-1003 is going from 3 weeks to 6 weeks.");
@@ -324,7 +324,7 @@ function Section2Disruption({ onSubmit, loading, sRef, d, parts }: { onSubmit: (
             </label>
             <textarea value={nlText} onChange={e => setNlText(e.target.value)} rows={4} style={{ width: "100%", background: d.subtle, border: `1px solid ${d.border}`, borderRadius: 12, color: d.fgPrimary, padding: 12, fontSize: 13, resize: "vertical", outline: "none", lineHeight: 1.6, boxSizing: "border-box", fontFamily: sans }} />
           </div>
-          <button onClick={() => onSubmit(sku, leadTime)} disabled={loading} style={{ height: 40, background: d.subtle, color: d.fgPrimary, border: `1px solid ${d.border}`, borderRadius: 12, fontWeight: 600, fontSize: 14, cursor: loading ? "default" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, transition: "background 120ms", fontFamily: sans }}>
+          <button onClick={() => onAsk(nlText)} disabled={loading} style={{ height: 40, background: d.subtle, color: d.fgPrimary, border: `1px solid ${d.border}`, borderRadius: 12, fontWeight: 600, fontSize: 14, cursor: loading ? "default" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, transition: "background 120ms", fontFamily: sans }}>
             <span style={{ color: d.copper }}>✦</span>
             {loading ? "Reasoning…" : "Ask the copilot"}
           </button>
@@ -564,7 +564,7 @@ function SimulationGauge({ d, sim }: { d: typeof Dk; sim: DisruptionResult["simu
 }
 
 /* ─── Section 3: The Answer ──────────────────────────────────────────────── */
-function Section3Answer({ runState, loadingStep, elapsed, sRef, d, result, error }: { runState: string; loadingStep: number; elapsed: number; sRef: React.RefObject<HTMLDivElement | null>; d: typeof Dk; result: DisruptionResult | null; error: string | null }) {
+function Section3Answer({ runState, loadingStep, elapsed, sRef, d, result, error, explanation }: { runState: string; loadingStep: number; elapsed: number; sRef: React.RefObject<HTMLDivElement | null>; d: typeof Dk; result: DisruptionResult | null; error: string | null; explanation: string | null }) {
   // The backend can refuse to answer. The UI must NOT paper over that.
   const constraintProven = result ? result.binding_constraint.proven : false;
   const costIsNull = result ? result.disruption_cost_dollars === null : true;
@@ -617,6 +617,17 @@ function Section3Answer({ runState, loadingStep, elapsed, sRef, d, result, error
 
   return (
     <div ref={sRef} style={{ marginBottom: 32, display: "flex", flexDirection: "column", gap: 24 }}>
+      {/* The AI's words -- shown ONLY when the copilot path was used. Every number
+          inside it came from the solver below. */}
+      {explanation && (
+        <Panel eyebrow="✦ The copilot's read" d={d}>
+          <p style={{ margin: 0, fontSize: 15, lineHeight: 1.7, color: d.fgPrimary, fontFamily: sans }}>{explanation}</p>
+          <p style={{ margin: "10px 0 0", fontSize: 12, color: d.fgMuted, fontFamily: sans }}>
+            The model wrote these sentences. It did not compute a single number in them — every figure came from the solver.
+          </p>
+        </Panel>
+      )}
+
       {/* 3a Headline */}
       <Panel accent eyebrow="③ The Answer" d={d}>
         <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
@@ -804,6 +815,7 @@ export default function App() {
   const [backtest, setBacktest] = useState<BacktestResult | null>(null);
   const [result, setResult] = useState<DisruptionResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [explanation, setExplanation] = useState<string | null>(null);
 
   useEffect(() => {
     fetchParts().then(ps => setParts(toPartRows(ps))).catch(() => {});
@@ -853,13 +865,35 @@ export default function App() {
     setActiveSection(n);
   };
 
-  // The real thing: 5 optimizations + 1,000 simulations on the server. 20-40s.
+  // The AI path: the LLM reads the sentence, the SOLVER answers it, the LLM
+  // writes the prose. Two LLM round trips; zero LLM arithmetic.
+  const handleAsk = async (text: string) => {
+    setRunState("loading");
+    setLoadingStep(0);
+    setElapsed(0);
+    setError(null);
+    setResult(null);
+    setExplanation(null);
+    s3.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    try {
+      const a = await fetchAgent(text);
+      setResult(a.recommendation);
+      setExplanation(a.explanation);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setRunState("done");
+    }
+  };
+
+  // The plain path: no AI at all. Same solver, same numbers.
   const handleSubmit = async (sku: string, lead: number) => {
     setRunState("loading");
     setLoadingStep(0);
     setElapsed(0);
     setError(null);
     setResult(null);
+    setExplanation(null);
     s3.current?.scrollIntoView({ behavior: "smooth", block: "start" });
     try {
       setResult(await fetchDisruption(sku, lead));
@@ -887,8 +921,8 @@ export default function App() {
           <TopBar runState={runState} d={d} />
           <div ref={scrollArea} style={{ flex: 1, overflowY: "auto", padding: "32px", scrollbarWidth: "thin", scrollbarColor: `${d.border} transparent` }}>
             <Section1Factory sRef={s1} d={d} parts={parts} />
-            <Section2Disruption onSubmit={handleSubmit} loading={runState === "loading"} sRef={s2} d={d} parts={parts} />
-            <Section3Answer runState={runState} loadingStep={loadingStep} elapsed={elapsed} sRef={s3} d={d} result={result} error={error} />
+            <Section2Disruption onSubmit={handleSubmit} onAsk={handleAsk} loading={runState === "loading"} sRef={s2} d={d} parts={parts} />
+            <Section3Answer runState={runState} loadingStep={loadingStep} elapsed={elapsed} sRef={s3} d={d} result={result} error={error} explanation={explanation} />
             <Section4Evidence sRef={s4} d={d} backtest={backtest} />
             <div style={{ height: 40 }} />
           </div>
