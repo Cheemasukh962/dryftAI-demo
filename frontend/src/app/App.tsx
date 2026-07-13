@@ -647,9 +647,27 @@ function Section3Answer({ runState, loadingStep, elapsed, sRef, d, result, error
 
 /* ─── Section 4: Evidence ─────────────────────────────────────────────────── */
 function Section4Evidence({ sRef, d, backtest }: { sRef: React.RefObject<HTMLDivElement | null>; d: typeof Dk; backtest: BacktestResult | null }) {
-  const rows: BacktestRow[] = backtest ? toBacktestRows(backtest) : BACKTEST_FALLBACK;
-  const saved = backtest ? Math.round(backtest.dollars_saved) : 691071;
-  const fillPts = backtest ? +(backtest.fill_rate_delta * 100).toFixed(1) : 6.5;
+  // Never render the fallback fixture here. Showing invented numbers while the real
+  // backtest loads would mean demoing figures that aren't ours.
+  if (!backtest) {
+    return (
+      <div ref={sRef} style={{ marginBottom: 32 }}>
+        <Panel eyebrow="4 The Evidence" title="Why believe it - backtest against history" d={d}>
+          <div style={{ padding: "32px 0", textAlign: "center" }}>
+            <div style={{ fontSize: 14, color: d.fgSecondary, fontFamily: sans, marginBottom: 6 }}>
+              Replaying held-out demand through both policies...
+            </div>
+            <div style={{ fontSize: 12, color: d.fgMuted, fontFamily: sans }}>
+              First run re-solves the plan for every week (~40s), then it is cached.
+            </div>
+          </div>
+        </Panel>
+      </div>
+    );
+  }
+  const rows: BacktestRow[] = toBacktestRows(backtest);
+  const saved = Math.round(backtest.dollars_saved);
+  const fillPts = +(backtest.fill_rate_delta * 100).toFixed(1);
   return (
     <div ref={sRef} style={{ marginBottom: 32 }}>
       <Panel eyebrow="④ The Evidence" title="Why believe it — backtest against history" d={d}>

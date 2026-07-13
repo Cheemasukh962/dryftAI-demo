@@ -11,6 +11,8 @@ Note the honesty guards survive the trip to the browser:
     gap between the probes. The UI must not claim a winner in that case.
 """
 import functools
+import json
+import os
 
 import pandas as pd
 from fastapi import FastAPI, HTTPException
@@ -170,9 +172,10 @@ def disrupt(req: DisruptRequest):
     }
 
 
-@functools.lru_cache(maxsize=1)
-def _cached_backtest():
-    """The backtest re-solves once per week and takes minutes. Cache it."""
+CACHE_PATH = f"{DATA_DIR}/backtest_cache.json"
+
+
+def _compute_backtest():
     parts, hist = _load()
     r = run_backtest(parts, hist, test_weeks=12,
                      budget_factor=BUDGET_FACTOR, max_seconds=3.0)
@@ -186,6 +189,21 @@ def _cached_backtest():
         "dollars_saved": round(r["dollars_saved"], 2),
         "fill_rate_delta": round(r["fill_delta"], 4),
     }
+
+
+@functools.lru_cache(maxsize=1)
+def _cached_backtest():
+    """The backtest re-solves the whole plan once per week -- ~40s. That is far too
+    long to block a page load, and while it ran the UI would be showing FALLBACK
+    numbers, i.e. lying. So we persist it to disk: computed once, instant forever
+    after. Delete data/backtest_cache.json to force a recompute."""
+    if os.path.exists(CACHE_PATH):
+        with open(CACHE_PATH) as f:
+            return json.load(f)
+    result = _compute_backtest()
+    with open(CACHE_PATH, "w") as f:
+        json.dump(result, f, indent=2)
+    return result
 
 
 @app.get("/api/backtest")
