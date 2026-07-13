@@ -383,6 +383,9 @@ function makeBarLabel(d: typeof Dk, rows: ReallocRow[]) {
 function ReallocationChart({ d, rows }: { d: typeof Dk; rows: ReallocRow[] }) {
   const barLabel = makeBarLabel(d, rows);
   const span = Math.max(...rows.map(r => Math.abs(r.delta)), 1) * 1.35;
+  const spent = rows.filter(r => r.delta > 0).reduce((a, r) => a + r.delta, 0);
+  const cut = rows.filter(r => r.delta < 0).reduce((a, r) => a + r.delta, 0);
+  const net = spent + cut;
   return (
     <div>
       <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 12, fontSize: 11, color: d.fgMuted, fontFamily: sans }}>
@@ -409,6 +412,15 @@ function ReallocationChart({ d, rows }: { d: typeof Dk; rows: ReallocRow[] }) {
           </ResponsiveContainer>
         </div>
       </div>
+      {/* The whole insight in one line: the money did not appear, it MOVED. */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10, flexWrap: "wrap", marginTop: 12, padding: "10px 14px", background: d.subtle, borderRadius: 8, fontFamily: mono, fontSize: 13, fontVariantNumeric: "tabular-nums" }}>
+        <span style={{ color: d.copper }}>{fmtSigned(spent)} spent</span>
+        <span style={{ color: d.fgMuted }}>+</span>
+        <span style={{ color: d.red }}>{fmtSigned(cut)} cut</span>
+        <span style={{ color: d.fgMuted }}>=</span>
+        <span style={{ color: d.fgPrimary, fontWeight: 700 }}>{fmtSigned(Math.round(net))} net</span>
+        <span style={{ color: d.fgMuted, fontFamily: sans, fontSize: 12 }}>— the budget never grew, the money just moved</span>
+      </div>
     </div>
   );
 }
@@ -433,12 +445,13 @@ function BudgetStrip({ d, r }: { d: typeof Dk; r: DisruptionResult }) {
           <div style={{ fontFamily: mono, fontSize: 30, fontWeight: 700, color: d.fgPrimary, fontVariantNumeric: "tabular-nums" }}>{fmt(Math.round(r.cash_spent_week0_after_dollars))}</div>
         </div>
         <div style={{ marginLeft: "auto", textAlign: "right", paddingBottom: 4 }}>
-          <div style={{ fontFamily: mono, fontSize: 24, fontWeight: 700, color: d.fgPrimary, fontVariantNumeric: "tabular-nums" }}>{r.parts_affected} / {r.total_parts}</div>
-          <div style={{ fontSize: 12, color: d.fgMuted, fontFamily: sans }}>parts rewritten</div>
+          <div style={{ fontFamily: mono, fontSize: 24, fontWeight: 700, color: d.fgPrimary, fontVariantNumeric: "tabular-nums" }}>{r.order_changes_week0.length} / {r.total_parts}</div>
+          <div style={{ fontSize: 12, color: d.fgMuted, fontFamily: sans }}>this week&apos;s orders changed</div>
+          <div style={{ fontSize: 11, color: d.fgMuted, fontFamily: sans, marginTop: 2 }}>({r.parts_affected} of {r.total_parts} across all {r.weeks} weeks)</div>
         </div>
       </div>
       <p style={{ fontSize: 13, color: d.fgSecondary, lineHeight: 1.65, margin: 0, borderLeft: `3px solid ${d.border}`, paddingLeft: 12, fontFamily: sans }}>
-        One part got late. {r.parts_affected} of {r.total_parts} orders rewritten — because the budget didn't grow. Paying for {r.sku} means cancelling someone else.
+        One part got late — and {r.order_changes_week0.length} of {r.total_parts} parts had <strong>this week&apos;s</strong> order rewritten ({r.parts_affected} of {r.total_parts} across the full {r.weeks} weeks). The budget didn&apos;t grow, so paying for {r.sku} means cancelling someone else. The bars below net to roughly zero — that is the same money, moved.
       </p>
     </div>
   );
@@ -677,7 +690,7 @@ function Section4Evidence({ sRef, d, backtest }: { sRef: React.RefObject<HTMLDiv
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24, marginBottom: 24 }}>
           <div>
-            <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.07em", textTransform: "uppercase" as const, color: d.fgMuted, marginBottom: 10, fontFamily: sans }}>Annual cost</div>
+            <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.07em", textTransform: "uppercase" as const, color: d.fgMuted, marginBottom: 10, fontFamily: sans }}>Total cost over {backtest.test_weeks} weeks</div>
             <ResponsiveContainer width="100%" height={160}>
               <BarChart data={rows} margin={{ top: 16, right: 0, left: 0, bottom: 0 }} barCategoryGap="40%">
                 <XAxis dataKey="label" tick={{ fill: d.fgSecondary, fontSize: 11, fontFamily: sans }} axisLine={false} tickLine={false} />
