@@ -26,7 +26,8 @@ from pydantic_ai import Agent, ModelRetry, RunContext
 from reorder.forecast import forecast_quantiles
 from reorder.problem_builder import build_problem
 from reorder.solver import solve_reorder
-from reorder.scenario import with_lead_time, disruption_cost, NotOptimalError
+from reorder.scenario import (with_lead_time, disruption_cost,
+                              disruption_cost_bounds, NotOptimalError)
 from reorder.probes import probe_constraints
 from reorder.simulate import simulate
 from reorder.diff import diff_plans
@@ -57,12 +58,23 @@ SYSTEM_PROMPT = """You are a purchasing copilot for a factory buyer.
 The buyer describes a supply disruption in plain English. Your job is ONLY to:
 1. Identify the affected SKU and its new lead time (in weeks) from their message.
 2. Call `analyze_lead_time_change` with those two values.
-3. Return a Recommendation that reports what the SOLVER decided.
+3. Return a Recommendation reporting what the SOLVER decided.
 
-You NEVER invent, estimate, or calculate a number. Every quantity, cost, and
-constraint in your answer must come from a tool result. Explain the solver's
-answer in plain language a buyer can act on: what to order, what the delay cost,
-and which limit is holding them back."""
+You NEVER invent, estimate, or calculate a number. Every quantity, cost and
+constraint you state must come from a tool result.
+
+Write `explanation` as 2-4 short sentences a busy buyer can act on. Cover:
+  - what to order now (the first week's quantity from revised_orders)
+  - what the delay costs (disruption_cost_dollars; if disruption_cost_range is
+    given, say the cost is between those two numbers -- that is the solver's
+    proven bound, not a guess)
+  - which limit is holding them back (binding_constraint) and what relaxing it is
+    worth (from counterfactuals)
+If disruption_cost_dollars is null, say plainly that the solver could not PROVE a
+reliable cost for this run, and do not invent one.
+
+Speak in plain business English. Never mention JSON, fields, tools, or solvers by
+name. Do not dump raw arrays at the buyer."""
 
 
 # --- The real work. Kept as plain functions so they can be unit-tested directly,
@@ -75,6 +87,27 @@ def _get_part_context(data_dir: str, sku: str) -> dict:
         raise ModelRetry(
             f"No such SKU '{sku}'. Valid examples: {parts['sku'].head(5).tolist()}")
     return row.iloc[0].to_dict()
+
+
+# Solve settings for the agent path. These MUST match the tuning the CLI demo uses,
+# or the agent quietly produces a worse answer than `reorder demo` does:
+#   BUDGET_FACTOR < 1  -> the weekly cash cap actually BINDS. With a slack budget,
+#                         relaxing the budget recovers $0 and "cash is your binding
+#                         constraint" is simply false.
+#   RELATIVE_GAP 0.01  -> tight enough to trust, loose enough that a 40-SKU instance
+#                         can PROVE optimality. At 0.005 it times out as FEASIBLE and
+#                         the honesty guard then (correctly) suppresses the cost delta.
+#   MAX_SECONDS 60     -> generous HEADROOM. At gap 0.01 the disrupted solve needed
+#                         ~20s of a 30s budget, so under the load of a real agent run
+#                         it sometimes tipped over the limit, came back FEASIBLE, and
+#                         the guard suppressed the cost. Flaky, not broken -- but a
+#                         demo that intermittently says "not provable" is worthless.
+#                         At gap 0.02 both solves prove in ~6s total, 10x inside the
+#                         limit. The wider gap costs precision, but we publish the
+#                         rigorous bound, so the honesty is preserved.
+BUDGET_FACTOR = 0.9
+RELATIVE_GAP = 0.02
+MAX_SECONDS = 60.0
 
 
 def _analyze_lead_time_change(data_dir: str, sku: str, new_lead_time: int) -> dict:
@@ -91,23 +124,32 @@ def _analyze_lead_time_change(data_dir: str, sku: str, new_lead_time: int) -> di
 
     fc = forecast_quantiles(hist, horizon=12)
     problem = build_problem(parts, fc, weeks=12)
+    # Make the weekly cash cap bind -- the premise of the whole problem.
+    weekly_spend = sum(problem.part(s).unit_cost * (sum(problem.demand[s]) / problem.weeks)
+                       for s in problem.skus)
+    problem.budget = [int(round(weekly_spend * BUDGET_FACTOR))] * problem.weeks
 
-    before = solve_reorder(problem, max_seconds=20)
+    before = solve_reorder(problem, max_seconds=MAX_SECONDS, relative_gap=RELATIVE_GAP)
     after_problem = with_lead_time(problem, sku, new_lead_time)
-    after = solve_reorder(after_problem, max_seconds=20)
+    after = solve_reorder(after_problem, max_seconds=MAX_SECONDS, relative_gap=RELATIVE_GAP)
 
     if after.status == "INFEASIBLE":
         raise ModelRetry(
             "With that lead time the problem is INFEASIBLE -- no valid plan exists. "
             "Ask the buyer to relax a constraint (budget, warehouse, or safety stock).")
 
-    # Honesty guard: only report a delta if BOTH solves were proven optimal.
+    # Honesty guard: only report a delta if BOTH solves were proven optimal, and
+    # report the rigorous interval alongside it (an "OPTIMAL" plan still carries
+    # up to `RELATIVE_GAP` of slack, which a bare point estimate would hide).
     try:
         delta = to_dollars(disruption_cost(before, after))
+        lo, hi = disruption_cost_bounds(before, after)
+        cost_range = [to_dollars(lo), to_dollars(hi)]
     except NotOptimalError:
-        delta = None
+        delta, cost_range = None, None
 
-    probes = probe_constraints(after_problem, after, max_seconds=10)
+    probes = probe_constraints(after_problem, after, max_seconds=MAX_SECONDS,
+                               relative_gap=RELATIVE_GAP)
     sim = simulate(after_problem, after, n=1000)
     changes = diff_plans(before, after)
 
@@ -116,6 +158,7 @@ def _analyze_lead_time_change(data_dir: str, sku: str, new_lead_time: int) -> di
         "new_lead_time": new_lead_time,
         "revised_orders": {sku: after.orders[sku]},
         "disruption_cost_dollars": delta,
+        "disruption_cost_range": cost_range,
         "solver_status": after.status,
         "binding_constraint": probes[0].name,
         "counterfactuals": [
