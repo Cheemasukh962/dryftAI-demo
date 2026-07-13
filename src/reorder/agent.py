@@ -28,7 +28,7 @@ from reorder.problem_builder import build_problem
 from reorder.solver import solve_reorder
 from reorder.scenario import (with_lead_time, disruption_cost,
                               disruption_cost_bounds, NotOptimalError)
-from reorder.probes import probe_constraints
+from reorder.probes import probe_constraints, binding_constraint
 from reorder.simulate import simulate
 from reorder.diff import diff_plans
 from reorder.models import to_dollars
@@ -150,6 +150,9 @@ def _analyze_lead_time_change(data_dir: str, sku: str, new_lead_time: int) -> di
 
     probes = probe_constraints(after_problem, after, max_seconds=MAX_SECONDS,
                                relative_gap=RELATIVE_GAP)
+    # Only name a bottleneck when the winner's WORST case beats the runner-up's BEST
+    # case. Otherwise the solver's gap slack could explain the whole difference.
+    top, proven = binding_constraint(probes)
     sim = simulate(after_problem, after, n=1000)
     changes = diff_plans(before, after)
 
@@ -160,9 +163,13 @@ def _analyze_lead_time_change(data_dir: str, sku: str, new_lead_time: int) -> di
         "disruption_cost_dollars": delta,
         "disruption_cost_range": cost_range,
         "solver_status": after.status,
-        "binding_constraint": probes[0].name,
+        "binding_constraint": (top.name if proven else
+                               "not provable at this solver tolerance"),
+        "binding_constraint_is_proven": proven,
         "counterfactuals": [
-            f"{p.name}: recovers ${to_dollars(p.recovered):,.2f}" for p in probes],
+            f"{p.name}: recovers ${to_dollars(p.recovered):,.2f} "
+            f"(provable ${to_dollars(p.lo):,.0f}-${to_dollars(p.hi):,.0f})"
+            for p in probes],
         "plan_changes": changes.summary,
         "fill_rate_p50": round(sim.fill_rate_p50, 4),
         "fill_rate_p10": round(sim.fill_rate_p10, 4),

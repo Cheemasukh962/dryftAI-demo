@@ -14,7 +14,7 @@ from reorder.solver import solve_reorder
 from reorder.baseline import backtest
 from reorder.scenario import (with_lead_time, disruption_cost,
                               disruption_cost_bounds, NotOptimalError)
-from reorder.probes import probe_constraints
+from reorder.probes import probe_constraints, binding_constraint
 from reorder.simulate import simulate
 from reorder.diff import diff_plans
 from reorder.models import to_dollars
@@ -101,11 +101,16 @@ def cmd_demo(args):
         print(f"\nCOST OF THE DISRUPTION: not reportable -- {e}")
 
     print("\nWHICH LIMIT IS BINDING?  (cost recovered if we relax it)")
-    for i, p in enumerate(probe_constraints(after_problem, after,
-                                            max_seconds=args.max_seconds,
-                                            relative_gap=gap)):
-        marker = "  <-- binding constraint" if i == 0 and p.recovered > 0 else ""
-        print(f"  {p.name:<20} recovers ${to_dollars(p.recovered):>12,.2f}{marker}")
+    probes = probe_constraints(after_problem, after, max_seconds=args.max_seconds,
+                               relative_gap=gap)
+    top, proven = binding_constraint(probes)
+    for p in probes:
+        mark = "  <-- BINDING" if (p is top and proven) else ""
+        print(f"  {p.name:<20} recovers ${to_dollars(p.recovered):>11,.2f}"
+              f"  [provable ${to_dollars(p.lo):>9,.0f}..${to_dollars(p.hi):>9,.0f}]{mark}")
+    if not proven:
+        print("  (!) Cannot name a winner: the solver's gap slack is wider than the")
+        print("      difference between these probes. Tighten --relative-gap to decide.")
 
     sim = simulate(after_problem, after, n=args.runs)
     print(f"\nSTRESS TEST ({sim.runs} sampled demand futures):")
