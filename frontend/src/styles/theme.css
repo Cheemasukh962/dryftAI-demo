@@ -1,0 +1,220 @@
+@custom-variant dark (&:is(.dark *));
+
+/* Dark instrument mode — default. Steel palette, copper accent. */
+:root {
+  --font-size: 16px;
+  --background: #0C121A;
+  --foreground: #E7ECF2;
+  --card: #161F29;
+  --card-foreground: #E7ECF2;
+  --popover: #161F29;
+  --popover-foreground: #E7ECF2;
+  --primary: #D6863A;
+  --primary-foreground: #ffffff;
+  --secondary: #222E3A;
+  --secondary-foreground: #AEBAC8;
+  --muted: #222E3A;
+  --muted-foreground: #63728A;
+  --accent: rgba(214, 134, 58, 0.14);
+  --accent-foreground: #E2A567;
+  --destructive: #E5654E;
+  --destructive-foreground: #ffffff;
+  --border: #33404F;
+  --input: transparent;
+  --input-background: #222E3A;
+  --switch-background: #33404F;
+  --font-weight-medium: 500;
+  --font-weight-normal: 400;
+  --ring: #D6863A;
+  --chart-1: #D6863A;
+  --chart-2: #33B37C;
+  --chart-3: #E5654E;
+  --chart-4: #4285D4;
+  --chart-5: #33404F;
+  --radius: 1rem;
+  --sidebar: #161F29;
+  --sidebar-foreground: #E7ECF2;
+  --sidebar-primary: #D6863A;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #222E3A;
+  --sidebar-accent-foreground: #AEBAC8;
+  --sidebar-border: #33404F;
+  --sidebar-ring: #D6863A;
+}
+
+/* Light mode override — applied via .rc-light on the root wrapper */
+.rc-light {
+  --background: #F7F9FB;
+  --foreground: #0F1720;
+  --card: #FFFFFF;
+  --card-foreground: #0F1720;
+  --popover: #FFFFFF;
+  --popover-foreground: #0F1720;
+  --primary: #D6863A;
+  --primary-foreground: #ffffff;
+  --secondary: #EEF2F6;
+  --secondary-foreground: #0F1720;
+  --muted: #EEF2F6;
+  --muted-foreground: #8593A5;
+  --accent: #FBF3EA;
+  --accent-foreground: #BC6F26;
+  --destructive: #D4463A;
+  --destructive-foreground: #ffffff;
+  --border: #CDD7E1;
+  --input: transparent;
+  --input-background: #EEF2F6;
+  --switch-background: #AEBAC8;
+  --ring: #D6863A;
+  --chart-1: #D6863A;
+  --chart-2: #1E9A61;
+  --chart-3: #D4463A;
+  --chart-4: #2E68BE;
+  --chart-5: #CDD7E1;
+  --sidebar: #FFFFFF;
+  --sidebar-foreground: #0F1720;
+  --sidebar-primary: #D6863A;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #EEF2F6;
+  --sidebar-accent-foreground: #0F1720;
+  --sidebar-border: #CDD7E1;
+  --sidebar-ring: #D6863A;
+}
+
+.dark {
+  --background: #0C121A;
+  --foreground: #E7ECF2;
+  --card: #161F29;
+  --card-foreground: #E7ECF2;
+  --popover: #161F29;
+  --popover-foreground: #E7ECF2;
+  --primary: #D6863A;
+  --primary-foreground: #ffffff;
+  --secondary: #222E3A;
+  --secondary-foreground: #AEBAC8;
+  --muted: #222E3A;
+  --muted-foreground: #63728A;
+  --accent: rgba(214, 134, 58, 0.14);
+  --accent-foreground: #E2A567;
+  --destructive: #E5654E;
+  --destructive-foreground: #ffffff;
+  --border: #33404F;
+  --input: oklch(0.269 0 0);
+  --ring: #D6863A;
+  --font-weight-medium: 500;
+  --font-weight-normal: 400;
+  --chart-1: #D6863A;
+  --chart-2: #33B37C;
+  --chart-3: #E5654E;
+  --chart-4: #4285D4;
+  --chart-5: #33404F;
+  --sidebar: #161F29;
+  --sidebar-foreground: #E7ECF2;
+  --sidebar-primary: #D6863A;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #222E3A;
+  --sidebar-accent-foreground: #AEBAC8;
+  --sidebar-border: #33404F;
+  --sidebar-ring: #D6863A;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-input-background: var(--input-background);
+  --color-switch-background: var(--switch-background);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+
+  /**
+  * Default typography styles for HTML elements (h1-h4, p, label, button, input).
+  * These are in @layer base, so Tailwind utility classes (like text-sm, text-lg) automatically override them.
+  */
+
+  html {
+    font-size: var(--font-size);
+  }
+
+  h1 {
+    font-size: var(--text-2xl);
+    font-weight: var(--font-weight-medium);
+    line-height: 1.5;
+  }
+
+  h2 {
+    font-size: var(--text-xl);
+    font-weight: var(--font-weight-medium);
+    line-height: 1.5;
+  }
+
+  h3 {
+    font-size: var(--text-lg);
+    font-weight: var(--font-weight-medium);
+    line-height: 1.5;
+  }
+
+  h4 {
+    font-size: var(--text-base);
+    font-weight: var(--font-weight-medium);
+    line-height: 1.5;
+  }
+
+  label {
+    font-size: var(--text-base);
+    font-weight: var(--font-weight-medium);
+    line-height: 1.5;
+  }
+
+  button {
+    font-size: var(--text-base);
+    font-weight: var(--font-weight-medium);
+    line-height: 1.5;
+  }
+
+  input {
+    font-size: var(--text-base);
+    font-weight: var(--font-weight-normal);
+    line-height: 1.5;
+  }
+}

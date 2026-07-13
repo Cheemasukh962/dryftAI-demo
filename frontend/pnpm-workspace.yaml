@@ -1,0 +1,15 @@
+packages:
+  - '.'
+# The Figma Make export pinned this to linux only, so pnpm skipped the win32/darwin
+# native binaries that esbuild and rollup need -- anyone cloning it on Windows or a
+# Mac hit "You installed esbuild for another platform than the one you're using".
+supportedArchitectures:
+  os:
+    - linux
+    - win32
+    - darwin
+  cpu:
+    - x64
+    - arm64
+  libc:
+    - glibc
