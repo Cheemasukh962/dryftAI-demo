@@ -38,7 +38,12 @@ def configure_tracing(service_name: str = "reorder-copilot") -> bool:
     if not (public_key and secret_key):
         return False        # no keys -> tracing off, everything else unchanged
 
-    host = os.environ.get("LANGFUSE_HOST", "https://cloud.langfuse.com").rstrip("/")
+    # Langfuse's own .env snippet calls this LANGFUSE_BASE_URL; their docs sometimes
+    # say LANGFUSE_HOST. Accept either, and note the region matters:
+    #   US -> https://us.cloud.langfuse.com     EU -> https://cloud.langfuse.com
+    host = (os.environ.get("LANGFUSE_BASE_URL")
+            or os.environ.get("LANGFUSE_HOST")
+            or "https://cloud.langfuse.com").rstrip("/")
     # Langfuse authenticates the OTLP endpoint with HTTP Basic (public:secret).
     auth = base64.b64encode(f"{public_key}:{secret_key}".encode()).decode()
     os.environ.setdefault("OTEL_EXPORTER_OTLP_ENDPOINT", f"{host}/api/public/otel")
